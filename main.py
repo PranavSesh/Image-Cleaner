@@ -2,6 +2,7 @@ from ctypes import windll
 from PIL import Image
 import customtkinter as ctk
 import tkinter as tk
+from database import *
 
 class Cleaner:
     FONT_TYPE = "Helvetica"
@@ -63,11 +64,11 @@ class Cleaner:
         filepath_entry.pack(padx=10, pady=10, fill=tk.X)
 
         slider_page = ctk.CTkFrame(container,
-                                   fg_color="grey")
+                                   fg_color="#44464a")
         slider_page.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         presets_page = ctk.CTkFrame(container,
-                                    fg_color="light grey")
+                                    fg_color="#44464a")
         presets_page.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         ctk.CTkLabel(slider_page,
@@ -88,6 +89,10 @@ class Cleaner:
                                         bg_color="transparent",
                                         fg_color="transparent")
             slider_frame.pack(fill=tk.X)
+
+            ctk.CTkLabel(slider_frame,
+                         text=colors[i][0].upper() + ':' if i < 3 else "   ",
+                         font=(Cleaner.FONT_TYPE, 18)).pack(side=tk.LEFT, padx=10)
 
             if i == 3:
                 ctk.CTkLabel(slider_frame,
@@ -136,6 +141,7 @@ class Cleaner:
                           fg_color="transparent",
                           corner_radius=0,
                           border_width=0,
+                          hover_color='#333436',
                           command=lambda j=i: self.set_compare_state(comparisons[j])).pack(fill=tk.X,
                                                                                             pady=10,
                                                                                             side=tk.LEFT)
@@ -166,6 +172,10 @@ class Cleaner:
                                         fg_color="transparent")
             slider_frame.pack(fill=tk.X)
 
+            ctk.CTkLabel(slider_frame,
+                         text=(colors[i] if i < 3 else "A")[0].upper() + ':',
+                         font=(Cleaner.FONT_TYPE, 18)).pack(side=tk.LEFT, padx=10)
+
             ctk.CTkSlider(slider_frame,
                           width=400, height=30,
                           bg_color="transparent",
@@ -186,12 +196,25 @@ class Cleaner:
                          textvariable=self.slider_vars["replace"][i],
                          font=(Cleaner.FONT_TYPE, 18)).pack(padx=10, pady=10, side=tk.LEFT)
 
+        self.preset_buttons = []
+        self.presets_frame = ctk.CTkScrollableFrame(presets_page)
+        self.presets_frame.pack(fill=tk.BOTH, expand=True)
 
         # clean button
         ctk.CTkButton(presets_page,
                       width=300,
                       text="Clean",
                       command=self.clean).pack(side=tk.BOTTOM)
+
+        ctk.CTkButton(presets_page,
+                      width=300,
+                      text="Add Preset",
+                      command=self.add_preset).pack(side=tk.BOTTOM)
+
+        ctk.CTkButton(presets_page,
+                      width=300,
+                      text="Remove Preset",
+                      command=self.remove_preset).pack(side=tk.BOTTOM)
 
     def set_compare_state(self, operator: str):
         self.compare_operator.set(operator)
@@ -207,6 +230,37 @@ class Cleaner:
             case _:
                 return False
 
+    def add_preset(self):
+        target_color = (
+            self.slider_vars["target"][0].get(),
+            self.slider_vars["target"][1].get(),
+            self.slider_vars["target"][2].get())
+
+        replace_color = (
+            self.slider_vars["replace"][0].get(),
+            self.slider_vars["replace"][1].get(),
+            self.slider_vars["replace"][2].get(),
+            self.slider_vars["replace"][3].get())
+
+        operator_val = self.compare_operator.get()
+
+        add_preset_to_database(Preset(target_color, replace_color, operator_val))
+
+        button = ctk.CTkButton(self.presets_frame, text=f"Target: {target_color} E: {self.slider_vars["target"][3].get()}\n"
+                                                        f"Replace: {replace_color}\n"
+                                                        f"Operator: {operator_val}")
+        button.pack(fill=tk.X)
+        self.preset_buttons.append(button)
+
+    def remove_preset(self):
+        # if self.preset_buttons:
+        #     button = self.preset_buttons.pop()
+        #     button.destroy()
+        # show_table()
+        stuff = load_presets()
+        for thing in stuff:
+            print(thing)
+
     def clean(self):
         self.img = None
         self.rgba = None
@@ -216,8 +270,7 @@ class Cleaner:
         self.target_color = (
             self.slider_vars["target"][0].get(),
             self.slider_vars["target"][1].get(),
-            self.slider_vars["target"][2].get(),
-            255)
+            self.slider_vars["target"][2].get())
 
         self.replace_color = (
             self.slider_vars["replace"][0].get(),
