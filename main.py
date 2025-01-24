@@ -196,7 +196,7 @@ class Cleaner:
                          textvariable=self.slider_vars["replace"][i],
                          font=(Cleaner.FONT_TYPE, 18)).pack(padx=10, pady=10, side=tk.LEFT)
 
-        self.preset_buttons = []
+        self.presets: list[Preset] = []
         self.presets_frame = ctk.CTkScrollableFrame(presets_page)
         self.presets_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -210,11 +210,6 @@ class Cleaner:
                       width=300,
                       text="Add Preset",
                       command=self.add_preset).pack(side=tk.BOTTOM)
-
-        ctk.CTkButton(presets_page,
-                      width=300,
-                      text="Remove Preset",
-                      command=self.remove_preset).pack(side=tk.BOTTOM)
 
     def set_compare_state(self, operator: str):
         self.compare_operator.set(operator)
@@ -243,20 +238,35 @@ class Cleaner:
             self.slider_vars["replace"][3].get())
 
         operator_val = self.compare_operator.get()
+        preset = Preset(target_color, replace_color, operator_val)
+        add_preset_to_database(preset)
 
-        add_preset_to_database(Preset(target_color, replace_color, operator_val))
+        preset_back = ctk.CTkFrame(self.presets_frame,
+                                   bg_color="white")
+        preset_back.pack(fill=tk.X)
 
-        button = ctk.CTkButton(self.presets_frame, text=f"Target: {target_color} E: {self.slider_vars["target"][3].get()}\n"
+        preset.select_button = ctk.CTkButton(preset_back,
+                                             text=f"Target: {target_color} E: {self.slider_vars["target"][3].get()}\n"
                                                         f"Replace: {replace_color}\n"
-                                                        f"Operator: {operator_val}")
-        button.pack(fill=tk.X)
-        self.preset_buttons.append(button)
+                                                        f"Operator: {operator_val}",
+                                             width=220)
+        preset.select_button.pack(fill=tk.X, side=tk.LEFT)
 
-    def remove_preset(self):
+        preset.remove_button = ctk.CTkButton(preset_back,
+                                             text="-",
+                                             width=20,
+                                             command=lambda: self.remove_preset(preset))
+        preset.remove_button.pack(side=tk.LEFT, fill=tk.Y)
+
+        self.presets.append(preset)
+
+    def remove_preset(self, preset):
         # if self.preset_buttons:
         #     button = self.preset_buttons.pop()
         #     button.destroy()
         # show_table()
+        rowid = get_row_id_from_record(preset)
+        print(f"removing preset: {rowid}")
         stuff = load_presets()
         for thing in stuff:
             print(thing)
@@ -305,3 +315,4 @@ class Cleaner:
 if __name__ == '__main__':
     app = Cleaner()
     app.root.mainloop()
+    # sql_connection.close()

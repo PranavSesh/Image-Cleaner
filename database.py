@@ -6,6 +6,11 @@ class Preset:
         self.replace = replace
         self.operator = operator
 
+        self.id: int = 0
+
+        self.select_button = None
+        self.remove_button = None
+
     def __str__(self):
         return f'{self.target} | {self.replace} | {self.operator}'
 
@@ -15,9 +20,12 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS presets
                (target, replace, operator)""")
 sql_connection.commit()
 
-def add_preset_to_database(preset) -> None:
+def add_preset_to_database(preset: Preset) -> None:
     cursor.execute("""INSERT INTO presets VALUES (?, ?, ?)""",
-                   (f'{preset.target}'.replace(" ", '')[1:-1], f'{preset.replace}'.replace(" ", '')[1:-1], f'{preset.operator}'))
+                   (
+                    f'{preset.target}'.replace(" ", '')[1:-1],
+                    f'{preset.replace}'.replace(" ", '')[1:-1],
+                    f'{preset.operator}'))
     sql_connection.commit()
 
 def show_table() -> None:
@@ -28,7 +36,7 @@ def show_table() -> None:
 
 def load_presets() -> list:
     presets = []
-    datas = cursor.execute("""SELECT * FROM presets""")
+    datas = cursor.execute("""SELECT *, rowid FROM presets""")
     sql_connection.commit()
     for data in datas:
         presets.append(Preset(
@@ -36,8 +44,17 @@ def load_presets() -> list:
             tuple(map(int, data[1].split(','))),
             data[2])
         )
+        print("rowid?", data[3])
     return presets
 
+def get_row_id_from_record(preset: Preset):
+    datas = cursor.execute(f"""SELECT rowid FROM presets WHERE 
+                               target='{str(preset.target).replace(" ", '')[1:-1]}' AND replace='{str(preset.replace).replace(" ", '')[1:-1]}' AND operator='{preset.operator}'""")
+    rowid = 0
+    for data in datas:
+        print(type(data))
+        rowid = data
+    return rowid
 
 # user_packs = cursor.execute(f"""SELECT rowid, * FROM userdatas WHERE username='{username}'""")
 #     sql_connection.commit()
