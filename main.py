@@ -238,12 +238,19 @@ class Cleaner:
             self.slider_vars["replace"][3].get())
 
         operator_val = self.compare_operator.get()
+
+        # create preset
         preset = Preset(target_color, replace_color, operator_val)
         add_preset_to_database(preset)
+
+        # get id of preset as set it
+        preset.id = get_row_id_from_record(preset)
 
         preset_back = ctk.CTkFrame(self.presets_frame,
                                    bg_color="white")
         preset_back.pack(fill=tk.X)
+
+        preset.preset_frame = preset_back
 
         preset.select_button = ctk.CTkButton(preset_back,
                                              text=f"Target: {target_color} E: {self.slider_vars["target"][3].get()}\n"
@@ -261,15 +268,15 @@ class Cleaner:
         self.presets.append(preset)
 
     def remove_preset(self, preset):
-        # if self.preset_buttons:
-        #     button = self.preset_buttons.pop()
-        #     button.destroy()
-        # show_table()
+
+        def filter_preset(p):
+            if p.id == rowid:
+                p.preset_frame.destroy()
+            return p.id != rowid
+
         rowid = get_row_id_from_record(preset)
-        print(f"removing preset: {rowid}")
-        stuff = load_presets()
-        for thing in stuff:
-            print(thing)
+        delete_preset(rowid)
+        self.presets = [preset for preset in filter(filter_preset, self.presets)]
 
     def clean(self):
         self.img = None
@@ -315,4 +322,4 @@ class Cleaner:
 if __name__ == '__main__':
     app = Cleaner()
     app.root.mainloop()
-    # sql_connection.close()
+    sql_connection.close()

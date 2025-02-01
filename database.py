@@ -8,6 +8,8 @@ class Preset:
 
         self.id: int = 0
 
+        self.preset_frame = None
+
         self.select_button = None
         self.remove_button = None
 
@@ -44,20 +46,23 @@ def load_presets() -> list:
             tuple(map(int, data[1].split(','))),
             data[2])
         )
-        print("rowid?", data[3])
+        # print("rowid?", data[3])
     return presets
 
 def get_row_id_from_record(preset: Preset):
     datas = cursor.execute(f"""SELECT rowid FROM presets WHERE 
                                target='{str(preset.target).replace(" ", '')[1:-1]}' AND replace='{str(preset.replace).replace(" ", '')[1:-1]}' AND operator='{preset.operator}'""")
-    rowid = 0
+    rowid = -1
     for data in datas:
-        print(type(data))
-        rowid = data
+        rowid = data[0]
     return rowid
 
+def delete_preset(rowid):
+    cursor.execute(f"""DELETE from presets WHERE rowid={rowid}""")
+    sql_connection.commit()
+
 # user_packs = cursor.execute(f"""SELECT rowid, * FROM userdatas WHERE username='{username}'""")
-#     sql_connection.commit()
+#     sql_connection.commit()``
 #
 # def get_records(username):
 #     user_packs = cursor.execute(f"""SELECT rowid, * FROM userdatas WHERE username='{username}'""")
