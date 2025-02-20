@@ -16,6 +16,9 @@ class Preset:
     def __str__(self):
         return f'{self.target} | {self.replace} | {self.operator}'
 
+    def __repr__(self):
+        return self.__str__()
+
 sql_connection = sql.connect('presets.db')
 cursor = sql_connection.cursor()
 cursor.execute("""CREATE TABLE IF NOT EXISTS presets 

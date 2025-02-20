@@ -200,6 +200,10 @@ class Cleaner:
         self.presets_frame = ctk.CTkScrollableFrame(presets_page)
         self.presets_frame.pack(fill=tk.BOTH, expand=True)
 
+        presets = load_presets()
+        for preset in presets:
+            self.add_preset(preset.target, preset.replace, preset.operator, True)
+
         # clean button
         ctk.CTkButton(presets_page,
                       width=300,
@@ -209,7 +213,16 @@ class Cleaner:
         ctk.CTkButton(presets_page,
                       width=300,
                       text="Add Preset",
-                      command=self.add_preset).pack(side=tk.BOTTOM)
+                      command=lambda: self.add_preset(
+                          (self.slider_vars["target"][0].get(),
+                           self.slider_vars["target"][1].get(),
+                           self.slider_vars["target"][2].get()),
+                          (self.slider_vars["replace"][0].get(),
+                           self.slider_vars["replace"][1].get(),
+                           self.slider_vars["replace"][2].get(),
+                           self.slider_vars["replace"][3].get()),
+                           self.compare_operator.get()
+                      )).pack(side=tk.BOTTOM)
 
     def set_compare_state(self, operator: str):
         self.compare_operator.set(operator)
@@ -225,23 +238,12 @@ class Cleaner:
             case _:
                 return False
 
-    def add_preset(self):
-        target_color = (
-            self.slider_vars["target"][0].get(),
-            self.slider_vars["target"][1].get(),
-            self.slider_vars["target"][2].get())
-
-        replace_color = (
-            self.slider_vars["replace"][0].get(),
-            self.slider_vars["replace"][1].get(),
-            self.slider_vars["replace"][2].get(),
-            self.slider_vars["replace"][3].get())
-
-        operator_val = self.compare_operator.get()
-
+    def add_preset(self, target_color, replace_color, operator_val, startup=False):
         # create preset
         preset = Preset(target_color, replace_color, operator_val)
-        add_preset_to_database(preset)
+
+        if not startup:
+            add_preset_to_database(preset)
 
         # get id of preset as set it
         preset.id = get_row_id_from_record(preset)
@@ -253,9 +255,10 @@ class Cleaner:
         preset.preset_frame = preset_back
 
         preset.select_button = ctk.CTkButton(preset_back,
-                                             text=f"Target: {target_color} E: {self.slider_vars["target"][3].get()}\n"
+                                             text=f"Target: {target_color}\n"
                                                         f"Replace: {replace_color}\n"
                                                         f"Operator: {operator_val}",
+                                             command=lambda: self.preset_onclick(target_color, replace_color, operator_val),
                                              width=220)
         preset.select_button.pack(fill=tk.X, side=tk.LEFT)
 
@@ -267,8 +270,19 @@ class Cleaner:
 
         self.presets.append(preset)
 
-    def remove_preset(self, preset):
+    def preset_onclick(self, target_color, replace_color, operator_val):
+        self.slider_vars["target"][0].set(target_color[0])
+        self.slider_vars["target"][1].set(target_color[1])
+        self.slider_vars["target"][2].set(target_color[2])
 
+        self.slider_vars["replace"][0].set(replace_color[0])
+        self.slider_vars["replace"][1].set(replace_color[1])
+        self.slider_vars["replace"][2].set(replace_color[2])
+        self.slider_vars["replace"][3].set(replace_color[3])
+
+        self.compare_operator.set(operator_val)
+
+    def remove_preset(self, preset):
         def filter_preset(p):
             if p.id == rowid:
                 p.preset_frame.destroy()
