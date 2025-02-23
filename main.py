@@ -208,6 +208,8 @@ class Cleaner:
         ctk.CTkButton(presets_page,
                       width=300,
                       text="Clean",
+                      fg_color="#3c784d",
+                      hover_color="#34543d",
                       command=self.clean).pack(side=tk.BOTTOM)
 
         ctk.CTkButton(presets_page,
@@ -265,6 +267,7 @@ class Cleaner:
         preset.remove_button = ctk.CTkButton(preset_back,
                                              text="-",
                                              width=20,
+                                             fg_color="#c24c55",
                                              command=lambda: self.remove_preset(preset))
         preset.remove_button.pack(side=tk.LEFT, fill=tk.Y)
 
